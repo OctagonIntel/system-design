@@ -1,0 +1,267 @@
+/* ── Overlay backdrop ────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+/* ── Modal panel ─────────────────────────────────────── */
+.modal {
+  width: min(900px, 92vw);
+  max-height: 88vh;
+  background: #111120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.18s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0 }
+  to   { transform: translateY(0);    opacity: 1 }
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.2px;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+/* ── Minimap wrapper ─────────────────────────────────── */
+.minimapWrapper {
+  flex-shrink: 0;
+  height: 280px;
+  background: #0e0e1a;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.minimap {
+  width: 100%;
+  height: 100%;
+}
+
+.minimapEmpty {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Summary grid ────────────────────────────────────── */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.card {
+  padding: 18px 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card:last-child {
+  border-right: none;
+}
+
+.cardTitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 14px;
+}
+
+.cardEmpty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.12);
+  margin: 0;
+}
+
+/* ── Nodes-by-type table ─────────────────────────────── */
+.typeTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.typeRow {
+  height: 28px;
+}
+
+.typeRow + .typeRow td {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.typeIcon {
+  width: 20px;
+  padding-right: 8px;
+  vertical-align: middle;
+  opacity: 0.85;
+}
+
+.typeName {
+  font-size: 12px;
+  color: #94a3b8;
+  vertical-align: middle;
+}
+
+.typeCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-align: right;
+  vertical-align: middle;
+  padding-left: 12px;
+}
+
+/* ── Stat rows (connections card) ────────────────────── */
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.statRow:last-of-type {
+  border-bottom: none;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #64748b;
+  flex: 1;
+}
+
+.statValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.statDanger {
+  color: #f97316;
+}
+
+.attackNote {
+  margin: 10px 0 0;
+  font-size: 10px;
+  color: #3d4f6a;
+  line-height: 1.4;
+}
+
+/* ── Risk badge ──────────────────────────────────────── */
+.riskBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 14px;
+}
+
+.riskNone {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 14px;
+}
+
+/* ── Unassessed nodes ────────────────────────────────── */
+.unassessedList {
+  margin-top: 4px;
+}
+
+.unassessedHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #eab308;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.unassessedItems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.unassessedItem {
+  font-size: 11px;
+  color: #475569;
+  padding: 2px 0;
+  padding-left: 18px;
+  position: relative;
+}
+
+.unassessedItem::before {
+  content: '·';
+  position: absolute;
+  left: 6px;
+  color: #334155;
+}

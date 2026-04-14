@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { getPortPosition, NODE_WIDTH, NODE_HEIGHT, PORTS, bestPort } from '../constants.js'
-import DiagramNode from './DiagramNode.jsx'
-import EdgeLayer   from './EdgeLayer.jsx'
+import DiagramNode  from './DiagramNode.jsx'
+import EdgeLayer    from './EdgeLayer.jsx'
+import ThreatLegend from './ThreatLegend.jsx'
 import styles from './Canvas.module.css'
 
 const CANVAS_W = 4000
@@ -11,6 +12,7 @@ export default function Canvas({
   nodes,
   edges,
   selectedId,
+  threatMode,
   onDrop,
   onSelectNode,
   onMoveNode,
@@ -18,6 +20,7 @@ export default function Canvas({
   onDeleteEdge,
   onLabelChange,
   onDeleteSelected,
+  onSetThreat,
 }) {
   const scrollRef = useRef(null)   // the overflow:auto viewport
   const canvasRef = useRef(null)   // the large 4000×3000 surface
@@ -32,6 +35,14 @@ export default function Canvas({
   const [tempEdgeEnd, setTempEdgeEnd] = useState(null)
   // { x, y }
 
+  // Which node's threat dropdown is open (null = none)
+  const [openThreatId, setOpenThreatId] = useState(null)
+
+  /* ── Close threat dropdown when exiting threat mode ─── */
+  useEffect(() => {
+    if (!threatMode) setOpenThreatId(null)
+  }, [threatMode])
+
   /* ── Scroll to a nice starting position ─────────────── */
   useEffect(() => {
     const s = scrollRef.current
@@ -42,15 +53,14 @@ export default function Canvas({
   useEffect(() => {
     function onKey(e) {
       if (document.activeElement.tagName === 'INPUT') return
-      if (e.key === 'Delete' || e.key === 'Backspace') onDeleteSelected()
-      if (e.key === 'Escape') cancelConnect()
+      if (!threatMode && (e.key === 'Delete' || e.key === 'Backspace')) onDeleteSelected()
+      if (e.key === 'Escape') { cancelConnect(); setOpenThreatId(null) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onDeleteSelected])
+  }, [onDeleteSelected, threatMode])
 
   /* ── Helpers ─────────────────────────────────────────── */
-  /** Canvas-relative coords from a pointer event */
   function canvasCoords(e) {
     const rect = canvasRef.current.getBoundingClientRect()
     return { x: e.clientX - rect.left, y: e.clientY - rect.top }
@@ -75,10 +85,11 @@ export default function Canvas({
     onDrop(type, x, y)
   }
 
-  /* ── Node body drag (repositioning) ─────────────────── */
+  /* ── Node body mousedown ─────────────────────────────── */
   function handleNodeMouseDown(e, nodeId) {
     if (e.button !== 0) return
     e.stopPropagation()
+    if (threatMode) return    // threat mode: no dragging
     const { x, y } = canvasCoords(e)
     const node = nodes.find(n => n.id === nodeId)
     if (!node) return
@@ -95,27 +106,24 @@ export default function Canvas({
     setTempEdgeEnd({ x: pp.x, y: pp.y })
   }
 
+  /* ── Threat dropdown toggle ──────────────────────────── */
+  function handleThreatClick(nodeId) {
+    setOpenThreatId(prev => prev === nodeId ? null : nodeId)
+  }
+
   /* ── Mouse move ──────────────────────────────────────── */
   function onMouseMove(e) {
     const { x, y } = canvasCoords(e)
-
     if (dragging) {
       onMoveNode(dragging.nodeId, x - dragging.offsetX, y - dragging.offsetY)
       return
     }
-
-    if (connecting) {
-      setTempEdgeEnd({ x, y })
-    }
+    if (connecting) setTempEdgeEnd({ x, y })
   }
 
   /* ── Mouse up ────────────────────────────────────────── */
   function onMouseUp(e) {
-    if (dragging) {
-      setDragging(null)
-      return
-    }
-
+    if (dragging) { setDragging(null); return }
     if (connecting) {
       const { x, y } = canvasCoords(e)
       tryFinishEdge(x, y)
@@ -123,45 +131,45 @@ export default function Canvas({
   }
 
   function tryFinishEdge(x, y) {
-    const HIT = 14  // px radius for port snapping
-
+    const HIT = 14
     for (const node of nodes) {
       if (node.id === connecting.fromNodeId) continue
 
-      // 1. Check individual ports first (tighter snap)
       for (const port of PORTS) {
         const pp = getPortPosition(node, port)
         if (Math.abs(pp.x - x) <= HIT && Math.abs(pp.y - y) <= HIT) {
           onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, port)
-          cancelConnect()
-          return
+          cancelConnect(); return
         }
       }
 
-      // 2. Accept a drop anywhere on the node body
-      if (
-        x >= node.x && x <= node.x + NODE_WIDTH &&
-        y >= node.y && y <= node.y + NODE_HEIGHT
-      ) {
+      if (x >= node.x && x <= node.x + NODE_WIDTH && y >= node.y && y <= node.y + NODE_HEIGHT) {
         const toPort = bestPort(connecting.fromX, connecting.fromY, node)
         onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, toPort)
-        cancelConnect()
-        return
+        cancelConnect(); return
       }
     }
-
     cancelConnect()
   }
 
-  /* ── Canvas click (deselect) ─────────────────────────── */
+  /* ── Canvas background click ─────────────────────────── */
   function onCanvasClick() {
     onSelectNode(null)
+    setOpenThreatId(null)
   }
 
-  /* ── Cursor class ────────────────────────────────────── */
-  const cursorClass = connecting ? styles.connecting
-                    : dragging  ? styles.dragging
+  /* ── Cursor ──────────────────────────────────────────── */
+  const cursorClass = connecting  ? styles.connecting
+                    : dragging    ? styles.dragging
                     : ''
+
+  /* ── Status bar copy ─────────────────────────────────── */
+  const threatsSet  = nodes.filter(n => n.threatLevel).length
+  const statusHint  = threatMode
+    ? `${threatsSet} of ${nodes.length} node${nodes.length !== 1 ? 's' : ''} rated`
+    : selectedId
+      ? 'Delete — remove selected · Double-click — rename'
+      : nodes.length > 0 ? 'Drag port circles to connect nodes' : ''
 
   return (
     <div className={styles.wrapper}>
@@ -169,75 +177,81 @@ export default function Canvas({
       <div ref={scrollRef} className={styles.scroll}>
         <div
           ref={canvasRef}
-          className={`${styles.canvas} ${cursorClass}`}
+          className={`${styles.canvas} ${cursorClass} ${threatMode ? styles.threatCanvas : ''}`}
           style={{ width: CANVAS_W, height: CANVAS_H }}
           onDragOver={onDragOver}
           onDrop={onDropCanvas}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
-          onMouseLeave={() => {
-            setDragging(null)
-            cancelConnect()
-          }}
+          onMouseLeave={() => { setDragging(null); cancelConnect() }}
           onClick={onCanvasClick}
         >
-        {/* Edge / connection overlay */}
-        <EdgeLayer
-          nodes={nodes}
-          edges={edges}
-          connecting={connecting}
-          tempEdgeEnd={tempEdgeEnd}
-          onEdgeClick={onDeleteEdge}
-        />
-
-        {/* Nodes */}
-        {nodes.map(node => (
-          <DiagramNode
-            key={node.id}
-            node={node}
-            isSelected={node.id === selectedId}
-            showPorts={connecting !== null}
-            onClick={onSelectNode}
-            onMouseDown={handleNodeMouseDown}
-            onPortMouseDown={handlePortMouseDown}
-            onLabelChange={onLabelChange}
+          {/* Edge / connection overlay */}
+          <EdgeLayer
+            nodes={nodes}
+            edges={edges}
+            connecting={connecting}
+            tempEdgeEnd={tempEdgeEnd}
+            onEdgeClick={onDeleteEdge}
           />
-        ))}
 
-        {/* Empty-state hint */}
-        {nodes.length === 0 && (
-          <div className={styles.empty}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
-              <line x1="12" y1="22" x2="12" y2="15.5" />
-              <polyline points="22 8.5 12 15.5 2 8.5" />
-            </svg>
-            <p className={styles.emptyTitle}>Design your architecture</p>
-            <p className={styles.emptyDesc}>Drag components from the sidebar to get started</p>
-          </div>
-        )}
+          {/* Nodes */}
+          {nodes.map(node => (
+            <DiagramNode
+              key={node.id}
+              node={node}
+              isSelected={node.id === selectedId}
+              showPorts={connecting !== null}
+              threatMode={threatMode}
+              threatDropdownOpen={node.id === openThreatId}
+              onClick={onSelectNode}
+              onMouseDown={handleNodeMouseDown}
+              onPortMouseDown={handlePortMouseDown}
+              onLabelChange={onLabelChange}
+              onThreatClick={handleThreatClick}
+              onSetThreat={onSetThreat}
+            />
+          ))}
+
+          {/* Empty-state hint */}
+          {nodes.length === 0 && (
+            <div className={styles.empty}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+                <line x1="12" y1="22" x2="12" y2="15.5" />
+                <polyline points="22 8.5 12 15.5 2 8.5" />
+              </svg>
+              <p className={styles.emptyTitle}>Design your architecture</p>
+              <p className={styles.emptyDesc}>Drag components from the sidebar to get started</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Status bar — outside the scroll area so it stays fixed */}
-      <div className={styles.statusBar}>
+      {/* Threat legend — floats above the status bar when active */}
+      {threatMode && nodes.length > 0 && (
+        <ThreatLegend nodes={nodes} />
+      )}
+
+      {/* Status bar */}
+      <div className={`${styles.statusBar} ${threatMode ? styles.statusThreat : ''}`}>
+        {threatMode && (
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 2 }}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <circle cx="12" cy="16" r="1" fill="#ef4444" stroke="none" />
+          </svg>
+        )}
         <span>{nodes.length} node{nodes.length !== 1 ? 's' : ''}</span>
         <span className={styles.dot} />
         <span>{edges.length} edge{edges.length !== 1 ? 's' : ''}</span>
-        {selectedId && (
+        {statusHint && (
           <>
             <span className={styles.dot} />
-            <span className={styles.hint}>Delete — remove selected &nbsp;·&nbsp; Double-click — rename</span>
-          </>
-        )}
-        {!selectedId && nodes.length > 0 && (
-          <>
-            <span className={styles.dot} />
-            <span className={styles.hint}>Drag port circles to connect nodes</span>
+            <span className={`${styles.hint} ${threatMode ? styles.hintThreat : ''}`}>{statusHint}</span>
           </>
         )}
       </div>
     </div>
   )
 }
-
