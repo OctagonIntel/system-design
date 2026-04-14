@@ -1,0 +1,129 @@
+/* ── Node shell ──────────────────────────────────────── */
+.node {
+  position: absolute;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #181828;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: visible; /* ports can bleed outside */
+  user-select: none;
+}
+
+.node:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.selected {
+  border-color: var(--nc) !important;
+  box-shadow:
+    0 0 0 1px var(--nc),
+    0 6px 28px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ── Colored left stripe ─────────────────────────────── */
+.stripe {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--nc);
+  opacity: 0.65;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.selected .stripe,
+.node:hover .stripe {
+  opacity: 1;
+}
+
+/* ── Inner body layout ───────────────────────────────── */
+.body {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 12px 0 16px;
+  gap: 10px;
+  pointer-events: none; /* ports and label input re-enable */
+}
+
+/* ── Icon badge ──────────────────────────────────────── */
+.iconWrap {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Text block ──────────────────────────────────────── */
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #dde4f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.typeTag {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--nc);
+  opacity: 0.75;
+}
+
+/* ── Inline label editor ─────────────────────────────── */
+.labelInput {
+  pointer-events: all;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--nc);
+  border-radius: 3px;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 2px 5px;
+  outline: none;
+}
+
+/* ── Port dots ───────────────────────────────────────── */
+.port {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--nc);
+  background: #181828;
+  cursor: crosshair;
+  opacity: 0;
+  transition: opacity 0.12s, transform 0.12s, background 0.12s;
+  z-index: 20;
+  pointer-events: all;
+}
+
+.portOn {
+  opacity: 1;
+}
+
+.port:hover {
+  background: var(--nc);
+  transform: scale(1.5);
+}
