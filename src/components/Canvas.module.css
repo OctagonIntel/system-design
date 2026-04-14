@@ -1,0 +1,84 @@
+/* ── Outer flex column ───────────────────────────────── */
+.wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0c0c14;
+}
+
+/* ── Scrollable viewport ─────────────────────────────── */
+.scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+/* ── Dot-grid infinite canvas surface ───────────────── */
+.canvas {
+  position: relative;
+  background-color: #0e0e1a;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  cursor: default;
+}
+
+.connecting {
+  cursor: crosshair;
+}
+
+.dragging {
+  cursor: grabbing;
+}
+
+/* ── Empty-state ─────────────────────────────────────── */
+.empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.1);
+}
+
+.emptyDesc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Status bar ──────────────────────────────────────── */
+.statusBar {
+  flex-shrink: 0;
+  height: 26px;
+  background: #0d0d1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  font-size: 10.5px;
+  color: #2d3f55;
+  user-select: none;
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.hint {
+  color: #1e2d3e;
+}
