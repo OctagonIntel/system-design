@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react'
 import { useDiagram } from './hooks/useDiagram.js'
-import Toolbar from './components/Toolbar.jsx'
-import Canvas  from './components/Canvas.jsx'
-import styles  from './App.module.css'
+import Toolbar         from './components/Toolbar.jsx'
+import Canvas          from './components/Canvas.jsx'
+import DiagramOverview from './components/DiagramOverview.jsx'
+import styles          from './App.module.css'
 
 export default function App() {
   const {
@@ -13,7 +14,8 @@ export default function App() {
     clearAll, loadDiagram,
   } = useDiagram()
 
-  const [threatMode, setThreatMode] = useState(false)
+  const [threatMode,    setThreatMode]    = useState(false)
+  const [overviewOpen,  setOverviewOpen]  = useState(false)
 
   /* ── Export diagram as JSON ──────────────────────────── */
   const exportDiagram = useCallback(() => {
@@ -52,6 +54,7 @@ export default function App() {
         onToggleThreat={() => setThreatMode(m => !m)}
         onExport={exportDiagram}
         onImport={importDiagram}
+        onOpenOverview={() => setOverviewOpen(true)}
       />
       <Canvas
         nodes={nodes}
@@ -67,6 +70,13 @@ export default function App() {
         onDeleteSelected={deleteSelected}
         onSetThreat={setThreatLevel}
       />
+      {overviewOpen && (
+        <DiagramOverview
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setOverviewOpen(false)}
+        />
+      )}
     </div>
   )
 }

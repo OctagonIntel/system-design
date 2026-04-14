@@ -3,7 +3,7 @@ import { NODE_TYPES } from '../constants.js'
 import NodeIcon from './NodeIcon.jsx'
 import styles from './Toolbar.module.css'
 
-export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat, onExport, onImport }) {
+export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat, onExport, onImport, onOpenOverview }) {
   const fileInputRef = useRef(null)
 
   function handleDragStart(e, type) {
@@ -53,6 +53,23 @@ export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat
         </svg>
         Threat Model
         {threatMode && <span className={styles.activeIndicator} />}
+      </button>
+
+      <div className={styles.divider} />
+
+      {/* ── Overview button ──────────────────────────── */}
+      <button
+        className={styles.overviewBtn}
+        onClick={onOpenOverview}
+        title="Open Diagram Overview"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+        Overview
       </button>
 
       <div className={styles.divider} />
