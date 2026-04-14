@@ -6,7 +6,7 @@
   background: #181828;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
-  overflow: visible; /* ports can bleed outside */
+  overflow: visible;
   user-select: none;
 }
 
@@ -20,6 +20,14 @@
   box-shadow:
     0 0 0 1px var(--nc),
     0 6px 28px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* In threat mode, nodes are clickable for the dropdown */
+.threatModeActive {
+  cursor: default;
+}
+.threatModeActive:hover {
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* ── Colored left stripe ─────────────────────────────── */
@@ -48,7 +56,7 @@
   height: 100%;
   padding: 0 12px 0 16px;
   gap: 10px;
-  pointer-events: none; /* ports and label input re-enable */
+  pointer-events: none;
 }
 
 /* ── Icon badge ──────────────────────────────────────── */
@@ -126,4 +134,117 @@
 .port:hover {
   background: var(--nc);
   transform: scale(1.5);
+}
+
+/* ── Threat level badge ──────────────────────────────── */
+.threatBadge {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+/* When a level is set, badge uses the threat color */
+.threatBadge[style*='--tc'] {
+  color: var(--tc);
+}
+
+/* ── Threat level dropdown ───────────────────────────── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: #12121e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  padding: 6px;
+  min-width: 154px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: all;
+}
+
+.dropdownHeader {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #334155;
+  padding: 4px 8px 6px;
+}
+
+.dropdownOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  text-align: left;
+}
+
+.dropdownOption:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+.optionActive {
+  background: color-mix(in srgb, var(--tc) 14%, transparent) !important;
+  color: var(--tc) !important;
+}
+
+.optionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tc);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--tc);
+}
+
+.checkIcon {
+  margin-left: auto;
+  color: var(--tc);
+  flex-shrink: 0;
+}
+
+.clearOption {
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: #475569;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.clearOption:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
 }

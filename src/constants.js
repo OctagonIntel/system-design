@@ -15,6 +15,16 @@ export const NODE_TYPES = [
 
 export const TYPE_MAP = Object.fromEntries(NODE_TYPES.map(t => [t.type, t]))
 
+// Threat model levels — ordered most-severe first
+export const THREAT_LEVELS = [
+  { level: 'critical', label: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.12)'  },
+  { level: 'high',     label: 'High',     color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+  { level: 'medium',   label: 'Medium',   color: '#eab308', bg: 'rgba(234,179,8,0.12)'  },
+  { level: 'low',      label: 'Low',      color: '#22c55e', bg: 'rgba(34,197,94,0.12)'  },
+]
+
+export const THREAT_MAP = Object.fromEntries(THREAT_LEVELS.map(t => [t.level, t]))
+
 export const PORTS = ['top', 'right', 'bottom', 'left']
 
 /** Returns the canvas-relative {x, y} of a port on a given node */

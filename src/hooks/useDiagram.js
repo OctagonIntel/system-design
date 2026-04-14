@@ -16,8 +16,8 @@ const DEFAULT_LABELS = {
 }
 
 export function useDiagram() {
-  const [nodes, setNodes]       = useState([])
-  const [edges, setEdges]       = useState([])
+  const [nodes, setNodes]           = useState([])
+  const [edges, setEdges]           = useState([])
   const [selectedId, setSelectedId] = useState(null)
 
   /** Add a node centered at (cx, cy) */
@@ -28,7 +28,8 @@ export function useDiagram() {
       type,
       x: cx - NODE_WIDTH  / 2,
       y: cy - NODE_HEIGHT / 2,
-      label: DEFAULT_LABELS[type] ?? type,
+      label:       DEFAULT_LABELS[type] ?? type,
+      threatLevel: null,
     }])
     setSelectedId(id)
     return id
@@ -42,6 +43,11 @@ export function useDiagram() {
   /** Rename a node */
   const updateLabel = useCallback((id, label) => {
     setNodes(prev => prev.map(n => n.id === id ? { ...n, label } : n))
+  }, [])
+
+  /** Set (or clear) the threat level on a node */
+  const setThreatLevel = useCallback((id, level) => {
+    setNodes(prev => prev.map(n => n.id === id ? { ...n, threatLevel: level } : n))
   }, [])
 
   /** Delete the currently selected node and its edges */
@@ -74,11 +80,26 @@ export function useDiagram() {
     setSelectedId(null)
   }, [])
 
+  /**
+   * Replace the diagram with imported data.
+   * Ensures imported nodes always carry a threatLevel field.
+   */
+  const loadDiagram = useCallback((data) => {
+    if (!data || typeof data !== 'object') return
+    if (Array.isArray(data.nodes)) {
+      setNodes(data.nodes.map(n => ({ threatLevel: null, ...n })))
+    }
+    if (Array.isArray(data.edges)) {
+      setEdges(data.edges)
+    }
+    setSelectedId(null)
+  }, [])
+
   return {
     nodes, edges, selectedId,
     setSelectedId,
-    addNode, moveNode, updateLabel,
+    addNode, moveNode, updateLabel, setThreatLevel,
     deleteSelected, addEdge, deleteEdge,
-    clearAll,
+    clearAll, loadDiagram,
   }
 }
