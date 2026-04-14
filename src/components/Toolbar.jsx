@@ -3,7 +3,7 @@ import { NODE_TYPES } from '../constants.js'
 import NodeIcon from './NodeIcon.jsx'
 import styles from './Toolbar.module.css'
 
-export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat, onExport, onImport, onOpenOverview }) {
+export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat, edgeMode, onToggleEdgeMode, onExport, onImport, onOpenOverview }) {
   const fileInputRef = useRef(null)
 
   function handleDragStart(e, type) {
@@ -56,6 +56,32 @@ export default function Toolbar({ onClear, nodeCount, threatMode, onToggleThreat
       </button>
 
       <div className={styles.divider} />
+
+      {/* ── Edge mode toggle ────────────────────────── */}
+      <div className={styles.edgeModeToggle}>
+        <button
+          className={`${styles.edgeModeBtn} ${edgeMode === 'connect' ? styles.edgeModeBtnActive : ''}`}
+          onClick={() => edgeMode !== 'connect' && onToggleEdgeMode()}
+          title="Connect mode — standard bezier edges"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+          Connect
+        </button>
+        <button
+          className={`${styles.edgeModeBtn} ${styles.edgeModeBtnAttack} ${edgeMode === 'attack' ? styles.edgeModeBtnAttackActive : ''}`}
+          onClick={() => edgeMode !== 'attack' && onToggleEdgeMode()}
+          title="Attack Path mode — draw threat vector edges"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" strokeDasharray="3 2" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+          Attack Path
+        </button>
+      </div>
 
       {/* ── Overview button ──────────────────────────── */}
       <button

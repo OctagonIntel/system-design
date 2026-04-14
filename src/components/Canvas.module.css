@@ -99,3 +99,45 @@
 .hintThreat {
   color: #5c2a2a;
 }
+
+/* ── Attack edge label badge ─────────────────────────── */
+.attackLabelPill {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 20px;
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.13s, border-color 0.13s;
+}
+
+.attackLabelPill:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+/* ── Attack edge label input ─────────────────────────── */
+.attackLabelInput {
+  padding: 3px 9px;
+  background: rgba(15, 10, 20, 0.92);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  border-radius: 20px;
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+  width: 160px;
+  text-align: center;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
+}
+
+.attackLabelInput::placeholder {
+  color: rgba(248, 113, 113, 0.35);
+}

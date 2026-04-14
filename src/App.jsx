@@ -10,12 +10,13 @@ export default function App() {
     nodes, edges, selectedId,
     setSelectedId,
     addNode, moveNode, updateLabel, setThreatLevel,
-    deleteSelected, addEdge, deleteEdge,
+    deleteSelected, addEdge, deleteEdge, updateEdgeLabel,
     clearAll, loadDiagram,
   } = useDiagram()
 
   const [threatMode,    setThreatMode]    = useState(false)
   const [overviewOpen,  setOverviewOpen]  = useState(false)
+  const [edgeMode,      setEdgeMode]      = useState('connect')
 
   /* ── Export diagram as JSON ──────────────────────────── */
   const exportDiagram = useCallback(() => {
@@ -52,6 +53,8 @@ export default function App() {
         onClear={clearAll}
         threatMode={threatMode}
         onToggleThreat={() => setThreatMode(m => !m)}
+        edgeMode={edgeMode}
+        onToggleEdgeMode={() => setEdgeMode(m => m === 'connect' ? 'attack' : 'connect')}
         onExport={exportDiagram}
         onImport={importDiagram}
         onOpenOverview={() => setOverviewOpen(true)}
@@ -61,6 +64,7 @@ export default function App() {
         edges={edges}
         selectedId={selectedId}
         threatMode={threatMode}
+        edgeMode={edgeMode}
         onDrop={addNode}
         onSelectNode={setSelectedId}
         onMoveNode={moveNode}
@@ -69,6 +73,7 @@ export default function App() {
         onLabelChange={updateLabel}
         onDeleteSelected={deleteSelected}
         onSetThreat={setThreatLevel}
+        onUpdateEdgeLabel={updateEdgeLabel}
       />
       {overviewOpen && (
         <DiagramOverview
