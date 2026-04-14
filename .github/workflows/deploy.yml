@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - claude/build-archsync-diagram-tool-XvFqj
   workflow_dispatch:
 
 permissions:
