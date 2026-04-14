@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { getPortPosition, NODE_WIDTH, NODE_HEIGHT, PORTS, bestPort } from '../constants.js'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { getPortPosition, edgeMidpoint, NODE_WIDTH, NODE_HEIGHT, PORTS, bestPort } from '../constants.js'
 import DiagramNode  from './DiagramNode.jsx'
 import EdgeLayer    from './EdgeLayer.jsx'
 import ThreatLegend from './ThreatLegend.jsx'
@@ -8,11 +8,18 @@ import styles from './Canvas.module.css'
 const CANVAS_W = 4000
 const CANVAS_H = 3000
 
+const ATTACK_LABEL_PRESETS = [
+  'SQL Injection', 'XSS', 'CSRF', 'Privilege Escalation',
+  'Lateral Movement', 'Data Exfiltration', 'Credential Theft',
+  'Man-in-the-Middle', 'Replay Attack', 'Brute Force',
+]
+
 export default function Canvas({
   nodes,
   edges,
   selectedId,
   threatMode,
+  edgeMode,          // 'connect' | 'attack'
   onDrop,
   onSelectNode,
   onMoveNode,
@@ -21,6 +28,7 @@ export default function Canvas({
   onLabelChange,
   onDeleteSelected,
   onSetThreat,
+  onUpdateEdgeLabel,
 }) {
   const scrollRef = useRef(null)   // the overflow:auto viewport
   const canvasRef = useRef(null)   // the large 4000×3000 surface
@@ -38,10 +46,18 @@ export default function Canvas({
   // Which node's threat dropdown is open (null = none)
   const [openThreatId, setOpenThreatId] = useState(null)
 
+  // Selected attack edge (for label editing)
+  const [selectedEdgeId, setSelectedEdgeId] = useState(null)
+
   /* ── Close threat dropdown when exiting threat mode ─── */
   useEffect(() => {
     if (!threatMode) setOpenThreatId(null)
   }, [threatMode])
+
+  /* ── Deselect edge when switching edge modes ─────────── */
+  useEffect(() => {
+    setSelectedEdgeId(null)
+  }, [edgeMode])
 
   /* ── Scroll to a nice starting position ─────────────── */
   useEffect(() => {
@@ -53,12 +69,23 @@ export default function Canvas({
   useEffect(() => {
     function onKey(e) {
       if (document.activeElement.tagName === 'INPUT') return
-      if (!threatMode && (e.key === 'Delete' || e.key === 'Backspace')) onDeleteSelected()
-      if (e.key === 'Escape') { cancelConnect(); setOpenThreatId(null) }
+      if (!threatMode && (e.key === 'Delete' || e.key === 'Backspace')) {
+        if (selectedEdgeId) {
+          onDeleteEdge(selectedEdgeId)
+          setSelectedEdgeId(null)
+        } else {
+          onDeleteSelected()
+        }
+      }
+      if (e.key === 'Escape') {
+        cancelConnect()
+        setOpenThreatId(null)
+        setSelectedEdgeId(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onDeleteSelected, threatMode])
+  }, [onDeleteSelected, onDeleteEdge, threatMode, selectedEdgeId])
 
   /* ── Helpers ─────────────────────────────────────────── */
   function canvasCoords(e) {
@@ -111,6 +138,11 @@ export default function Canvas({
     setOpenThreatId(prev => prev === nodeId ? null : nodeId)
   }
 
+  /* ── Attack edge select (for labeling) ──────────────── */
+  function handleEdgeSelect(edgeId) {
+    setSelectedEdgeId(prev => prev === edgeId ? null : edgeId)
+  }
+
   /* ── Mouse move ──────────────────────────────────────── */
   function onMouseMove(e) {
     const { x, y } = canvasCoords(e)
@@ -138,14 +170,14 @@ export default function Canvas({
       for (const port of PORTS) {
         const pp = getPortPosition(node, port)
         if (Math.abs(pp.x - x) <= HIT && Math.abs(pp.y - y) <= HIT) {
-          onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, port)
+          onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, port, edgeMode)
           cancelConnect(); return
         }
       }
 
       if (x >= node.x && x <= node.x + NODE_WIDTH && y >= node.y && y <= node.y + NODE_HEIGHT) {
         const toPort = bestPort(connecting.fromX, connecting.fromY, node)
-        onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, toPort)
+        onAddEdge(connecting.fromNodeId, connecting.fromPort, node.id, toPort, edgeMode)
         cancelConnect(); return
       }
     }
@@ -156,7 +188,25 @@ export default function Canvas({
   function onCanvasClick() {
     onSelectNode(null)
     setOpenThreatId(null)
+    setSelectedEdgeId(null)
   }
+
+  /* ── Attack edge label midpoints ─────────────────────── */
+  const attackEdgePositions = useMemo(() => {
+    const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]))
+    return edges
+      .filter(e => e.type === 'attack')
+      .map(edge => {
+        const from = nodeMap[edge.from]
+        const to   = nodeMap[edge.to]
+        if (!from || !to) return null
+        const fp  = getPortPosition(from, edge.fromPort)
+        const tp  = getPortPosition(to,   edge.toPort)
+        const mid = edgeMidpoint(fp.x, fp.y, edge.fromPort, tp.x, tp.y, edge.toPort)
+        return { edge, mid }
+      })
+      .filter(Boolean)
+  }, [nodes, edges])
 
   /* ── Cursor ──────────────────────────────────────────── */
   const cursorClass = connecting  ? styles.connecting
@@ -165,11 +215,14 @@ export default function Canvas({
 
   /* ── Status bar copy ─────────────────────────────────── */
   const threatsSet  = nodes.filter(n => n.threatLevel).length
+  const attackCount = edges.filter(e => e.type === 'attack').length
   const statusHint  = threatMode
     ? `${threatsSet} of ${nodes.length} node${nodes.length !== 1 ? 's' : ''} rated`
-    : selectedId
-      ? 'Delete — remove selected · Double-click — rename'
-      : nodes.length > 0 ? 'Drag port circles to connect nodes' : ''
+    : selectedEdgeId
+      ? 'Enter — save label · Esc — close · Delete — remove edge'
+      : selectedId
+        ? 'Delete — remove selected · Double-click — rename'
+        : nodes.length > 0 ? 'Drag port circles to connect nodes' : ''
 
   return (
     <div className={styles.wrapper}>
@@ -190,10 +243,61 @@ export default function Canvas({
           <EdgeLayer
             nodes={nodes}
             edges={edges}
+            edgeMode={edgeMode}
             connecting={connecting}
             tempEdgeEnd={tempEdgeEnd}
+            selectedEdgeId={selectedEdgeId}
             onEdgeClick={onDeleteEdge}
+            onEdgeSelect={handleEdgeSelect}
           />
+
+          {/* Attack edge label badges + edit inputs */}
+          {attackEdgePositions.map(({ edge, mid }) => {
+            const isSelected = edge.id === selectedEdgeId
+            return (
+              <div
+                key={`label-${edge.id}`}
+                style={{
+                  position: 'absolute',
+                  left: mid.x,
+                  top: mid.y,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 50,
+                  pointerEvents: 'all',
+                }}
+              >
+                {isSelected ? (
+                  <>
+                    <input
+                      autoFocus
+                      list="attack-label-presets"
+                      className={styles.attackLabelInput}
+                      value={edge.label ?? ''}
+                      placeholder="Label attack path…"
+                      onChange={ev => onUpdateEdgeLabel(edge.id, ev.target.value)}
+                      onKeyDown={ev => {
+                        if (ev.key === 'Escape' || ev.key === 'Enter') {
+                          setSelectedEdgeId(null)
+                        }
+                        ev.stopPropagation()
+                      }}
+                      onClick={ev => ev.stopPropagation()}
+                    />
+                    <datalist id="attack-label-presets">
+                      {ATTACK_LABEL_PRESETS.map(p => <option key={p} value={p} />)}
+                    </datalist>
+                  </>
+                ) : edge.label ? (
+                  <span
+                    className={styles.attackLabelPill}
+                    onClick={ev => { ev.stopPropagation(); setSelectedEdgeId(edge.id) }}
+                  >
+                    {edge.label}
+                  </span>
+                ) : null}
+              </div>
+            )
+          })}
 
           {/* Nodes */}
           {nodes.map(node => (
@@ -245,6 +349,12 @@ export default function Canvas({
         <span>{nodes.length} node{nodes.length !== 1 ? 's' : ''}</span>
         <span className={styles.dot} />
         <span>{edges.length} edge{edges.length !== 1 ? 's' : ''}</span>
+        {attackCount > 0 && (
+          <>
+            <span className={styles.dot} />
+            <span style={{ color: 'rgba(239,68,68,0.5)' }}>{attackCount} attack path{attackCount !== 1 ? 's' : ''}</span>
+          </>
+        )}
         {statusHint && (
           <>
             <span className={styles.dot} />

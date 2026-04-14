@@ -1,0 +1,16 @@
+@keyframes dashFlow {
+  to { stroke-dashoffset: -28; }
+}
+
+.attackPath {
+  stroke-dasharray: 8 6;
+  stroke-dashoffset: 0;
+  animation: dashFlow 1s linear infinite;
+}
+
+.attackPathSelected {
+  stroke-dasharray: 8 6;
+  stroke-dashoffset: 0;
+  animation: dashFlow 1s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));
+}

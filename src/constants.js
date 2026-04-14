@@ -27,6 +27,18 @@ export const THREAT_MAP = Object.fromEntries(THREAT_LEVELS.map(t => [t.level, t]
 
 export const PORTS = ['top', 'right', 'bottom', 'left']
 
+/** Relevant security controls keyed by node type */
+export const SECURITY_CONTROLS = {
+  client:       ['Input sanitization', 'CSP headers', 'Secure storage'],
+  gateway:      ['Rate limiting', 'Auth (OAuth/JWT)', 'Input validation', 'TLS'],
+  service:      ['Least privilege', 'Secret management', 'Dependency scanning'],
+  loadbalancer: ['DDoS protection', 'SSL termination', 'Health checks'],
+  database:     ['Encryption at rest', 'Access control', 'Audit logging', 'Backup policy'],
+  cache:        ['TTL policy', 'Eviction policy', 'No plaintext secrets'],
+  queue:        ['Message encryption', 'Dead letter queue', 'IAM permissions'],
+  storage:      ['WAF enabled', 'Signed URLs', 'HTTPS only'],
+}
+
 /** Returns the canvas-relative {x, y} of a port on a given node */
 export function getPortPosition(node, port) {
   const { x, y } = node
@@ -59,6 +71,16 @@ export function edgePath(x1, y1, port1, x2, y2, port2) {
   const [cx1, cy1] = outCP(x1, y1, port1)
   const [cx2, cy2] = outCP(x2, y2, port2)
   return `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`
+}
+
+/** Canvas midpoint of a cubic bezier edge (t = 0.5) */
+export function edgeMidpoint(x1, y1, port1, x2, y2, port2) {
+  const [cx1, cy1] = outCP(x1, y1, port1)
+  const [cx2, cy2] = outCP(x2, y2, port2)
+  return {
+    x: (x1 + 3 * cx1 + 3 * cx2 + x2) / 8,
+    y: (y1 + 3 * cy1 + 3 * cy2 + y2) / 8,
+  }
 }
 
 /** Cubic bezier path for an in-progress (temp) edge */

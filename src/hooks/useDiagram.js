@@ -30,6 +30,7 @@ export function useDiagram() {
       y: cy - NODE_HEIGHT / 2,
       label:       DEFAULT_LABELS[type] ?? type,
       threatLevel: null,
+      controls:    {},
     }])
     setSelectedId(id)
     return id
@@ -61,11 +62,28 @@ export function useDiagram() {
     })
   }, [selectedId])
 
-  /** Add a directed edge between two ports (deduplicates) */
-  const addEdge = useCallback((from, fromPort, to, toPort) => {
+  /** Add a directed edge between two ports (deduplicates per type) */
+  const addEdge = useCallback((from, fromPort, to, toPort, edgeType = 'connect') => {
     if (from === to) return
-    const id = `e|${from}:${fromPort}→${to}:${toPort}`
-    setEdges(prev => prev.some(e => e.id === id) ? prev : [...prev, { id, from, fromPort, to, toPort }])
+    const id = `e|${edgeType}|${from}:${fromPort}→${to}:${toPort}`
+    setEdges(prev => prev.some(e => e.id === id) ? prev : [
+      ...prev, { id, from, fromPort, to, toPort, type: edgeType, label: '' },
+    ])
+  }, [])
+
+  /** Toggle a security control checkbox on a node */
+  const toggleControl = useCallback((nodeId, controlName) => {
+    setNodes(prev => prev.map(n =>
+      n.id !== nodeId ? n : {
+        ...n,
+        controls: { ...n.controls, [controlName]: !n.controls?.[controlName] },
+      }
+    ))
+  }, [])
+
+  /** Update the label on an attack-path edge */
+  const updateEdgeLabel = useCallback((id, label) => {
+    setEdges(prev => prev.map(e => e.id === id ? { ...e, label } : e))
   }, [])
 
   /** Remove a single edge by id */
@@ -87,10 +105,10 @@ export function useDiagram() {
   const loadDiagram = useCallback((data) => {
     if (!data || typeof data !== 'object') return
     if (Array.isArray(data.nodes)) {
-      setNodes(data.nodes.map(n => ({ threatLevel: null, ...n })))
+      setNodes(data.nodes.map(n => ({ threatLevel: null, controls: {}, ...n })))
     }
     if (Array.isArray(data.edges)) {
-      setEdges(data.edges)
+      setEdges(data.edges.map(e => ({ type: 'connect', label: '', ...e })))
     }
     setSelectedId(null)
   }, [])
@@ -99,7 +117,7 @@ export function useDiagram() {
     nodes, edges, selectedId,
     setSelectedId,
     addNode, moveNode, updateLabel, setThreatLevel,
-    deleteSelected, addEdge, deleteEdge,
+    deleteSelected, addEdge, deleteEdge, updateEdgeLabel, toggleControl,
     clearAll, loadDiagram,
   }
 }
