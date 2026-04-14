@@ -3,6 +3,7 @@ import { useDiagram } from './hooks/useDiagram.js'
 import Toolbar         from './components/Toolbar.jsx'
 import Canvas          from './components/Canvas.jsx'
 import DiagramOverview from './components/DiagramOverview.jsx'
+import SecurityPanel   from './components/SecurityPanel.jsx'
 import styles          from './App.module.css'
 
 export default function App() {
@@ -10,7 +11,7 @@ export default function App() {
     nodes, edges, selectedId,
     setSelectedId,
     addNode, moveNode, updateLabel, setThreatLevel,
-    deleteSelected, addEdge, deleteEdge, updateEdgeLabel,
+    deleteSelected, addEdge, deleteEdge, updateEdgeLabel, toggleControl,
     clearAll, loadDiagram,
   } = useDiagram()
 
@@ -74,6 +75,11 @@ export default function App() {
         onDeleteSelected={deleteSelected}
         onSetThreat={setThreatLevel}
         onUpdateEdgeLabel={updateEdgeLabel}
+      />
+      <SecurityPanel
+        node={nodes.find(n => n.id === selectedId) ?? null}
+        isOpen={threatMode && !!selectedId}
+        onToggleControl={toggleControl}
       />
       {overviewOpen && (
         <DiagramOverview

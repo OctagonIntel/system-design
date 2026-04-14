@@ -30,6 +30,7 @@ export function useDiagram() {
       y: cy - NODE_HEIGHT / 2,
       label:       DEFAULT_LABELS[type] ?? type,
       threatLevel: null,
+      controls:    {},
     }])
     setSelectedId(id)
     return id
@@ -70,6 +71,16 @@ export function useDiagram() {
     ])
   }, [])
 
+  /** Toggle a security control checkbox on a node */
+  const toggleControl = useCallback((nodeId, controlName) => {
+    setNodes(prev => prev.map(n =>
+      n.id !== nodeId ? n : {
+        ...n,
+        controls: { ...n.controls, [controlName]: !n.controls?.[controlName] },
+      }
+    ))
+  }, [])
+
   /** Update the label on an attack-path edge */
   const updateEdgeLabel = useCallback((id, label) => {
     setEdges(prev => prev.map(e => e.id === id ? { ...e, label } : e))
@@ -94,7 +105,7 @@ export function useDiagram() {
   const loadDiagram = useCallback((data) => {
     if (!data || typeof data !== 'object') return
     if (Array.isArray(data.nodes)) {
-      setNodes(data.nodes.map(n => ({ threatLevel: null, ...n })))
+      setNodes(data.nodes.map(n => ({ threatLevel: null, controls: {}, ...n })))
     }
     if (Array.isArray(data.edges)) {
       setEdges(data.edges.map(e => ({ type: 'connect', label: '', ...e })))
@@ -106,7 +117,7 @@ export function useDiagram() {
     nodes, edges, selectedId,
     setSelectedId,
     addNode, moveNode, updateLabel, setThreatLevel,
-    deleteSelected, addEdge, deleteEdge, updateEdgeLabel,
+    deleteSelected, addEdge, deleteEdge, updateEdgeLabel, toggleControl,
     clearAll, loadDiagram,
   }
 }

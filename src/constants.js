@@ -27,6 +27,18 @@ export const THREAT_MAP = Object.fromEntries(THREAT_LEVELS.map(t => [t.level, t]
 
 export const PORTS = ['top', 'right', 'bottom', 'left']
 
+/** Relevant security controls keyed by node type */
+export const SECURITY_CONTROLS = {
+  client:       ['Input sanitization', 'CSP headers', 'Secure storage'],
+  gateway:      ['Rate limiting', 'Auth (OAuth/JWT)', 'Input validation', 'TLS'],
+  service:      ['Least privilege', 'Secret management', 'Dependency scanning'],
+  loadbalancer: ['DDoS protection', 'SSL termination', 'Health checks'],
+  database:     ['Encryption at rest', 'Access control', 'Audit logging', 'Backup policy'],
+  cache:        ['TTL policy', 'Eviction policy', 'No plaintext secrets'],
+  queue:        ['Message encryption', 'Dead letter queue', 'IAM permissions'],
+  storage:      ['WAF enabled', 'Signed URLs', 'HTTPS only'],
+}
+
 /** Returns the canvas-relative {x, y} of a port on a given node */
 export function getPortPosition(node, port) {
   const { x, y } = node
